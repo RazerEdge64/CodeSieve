@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const { fetchPRDiff } = require('./githubClient');
+const { parseUnifiedDiff } = require('./diffParser');
 
 app.use(bodyParser.json());
 
@@ -21,8 +22,9 @@ app.post('/webhook', async (req, res) => {
       const diff = await fetchPRDiff(owner, repo, prNumber);
   
       if (diff) {
-        console.log('🧠 Diff fetched! First 500 chars:\n');
-        console.log(diff.slice(0, 500)); // Limit log output
+        const parsed = parseUnifiedDiff(diff);
+        console.log('🧩 Parsed diff structure:\n');
+        console.dir(parsed, { depth: null, maxArrayLength: 10 });
       }
     } else {
       console.log('⚠️ Ignored event or unsupported action:', action);
