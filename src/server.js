@@ -6,6 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const { fetchPRDiff } = require('./githubClient');
 const { parseUnifiedDiff } = require('./diffParser');
+const { generatePRSummary } = require('./llmHandler');
 
 app.use(bodyParser.json());
 
@@ -23,8 +24,8 @@ app.post('/webhook', async (req, res) => {
   
       if (diff) {
         const parsed = parseUnifiedDiff(diff);
-        console.log('🧩 Parsed diff structure:\n');
-        console.dir(parsed, { depth: null, maxArrayLength: 10 });
+        const summary = await generatePRSummary(parsed);
+        console.log('📝 LLM Summary:\n', summary);
       }
     } else {
       console.log('⚠️ Ignored event or unsupported action:', action);
