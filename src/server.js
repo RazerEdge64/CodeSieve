@@ -2,11 +2,17 @@ require('dotenv').config();
 
 const express = require('express');
 const bodyParser = require('body-parser');
+
+const fs = require('fs');
+const path = require('path');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
 const { fetchPRDiff } = require('./githubClient');
 const { parseUnifiedDiff } = require('./diffParser');
 const { generatePRSummary } = require('./llmHandler');
+const { postSummaryComment } = require('./commentManager');
 
 app.use(bodyParser.json());
 
@@ -26,6 +32,29 @@ app.post('/webhook', async (req, res) => {
         const parsed = parseUnifiedDiff(diff);
         const summary = await generatePRSummary(parsed);
         console.log('📝 LLM Summary:\n', summary);
+        
+        // Load .codesieverc config (default to summary mode)
+        const configPath = path.join(__dirname, '../.codesieverc');
+        let mode = 'summary';
+        
+        if (fs.existsSync(configPath)) {
+          try {
+            const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+            mode = config.mode || 'summary';
+          } catch (e) {
+            console.warn('⚠️ Failed to parse .codesieverc — using defaults');
+          }
+        }
+        
+        // If in summary mode, post the comment
+        if (mode === 'summary') {
+          await postSummaryComment({
+            owner,
+            repo,
+            issue_number: prNumber,
+            body: `🧠 **CodeSieve PR Summary**\n\n${summary}`,
+          });
+        }
       }
     } else {
       console.log('⚠️ Ignored event or unsupported action:', action);
