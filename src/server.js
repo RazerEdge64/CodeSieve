@@ -7,11 +7,10 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-const { fetchPRDiff } = require('./githubClient');
+const { fetchPRDiff, fetchCommitDiff } = require('./githubClient');
 const { parseUnifiedDiff } = require('./diffParser');
 const { generatePRSummary, generateCommitMessage } = require('./llmHandler');
 const { postSummaryComment } = require('./commentManager');
-const { fetchCommitDiff } = require('./githubClient');
 
 app.use(bodyParser.json());
 
@@ -29,8 +28,7 @@ app.post('/webhook', async (req, res) => {
     const diff = await fetchPRDiff(owner, repo, prNumber);
 
     if (diff) {
-      const unifiedDiffText = diff.map(f => `diff --git a/${f.file} b/${f.file}\n${f.patch}`).join('\n');
-      const parsed = parseUnifiedDiff(unifiedDiffText);
+      const parsed = parseUnifiedDiff(diff);
       const summary = await generatePRSummary(parsed);
       console.log('📝 LLM Summary:\n', summary);
 
@@ -65,11 +63,14 @@ app.post('/webhook', async (req, res) => {
 
       const diff = await fetchCommitDiff(owner, repo, sha);
 
-      if (diff) {
-        const parsed = parseUnifiedDiff(diff);
+      if (diff && Array.isArray(diff)) {
+        const unifiedDiffText = diff.map(f => `diff --git a/${f.file} b/${f.file}\n${f.patch}`).join('\n');
+        const parsed = parseUnifiedDiff(unifiedDiffText);
         const suggestedMessage = await generateCommitMessage(parsed);
 
         console.log(`✍️ Suggested commit message for ${sha}:\n${suggestedMessage}\n`);
+      } else {
+        console.log(`⚠️ No diff found for commit: ${sha}`);
       }
     }
 
