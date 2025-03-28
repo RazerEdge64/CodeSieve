@@ -23,12 +23,15 @@ async function fetchPRDiff(owner, repo, pull_number) {
 async function fetchCommitDiff(owner, repo, sha) {
   try {
     const res = await githubAPI.get(`/repos/${owner}/${repo}/commits/${sha}`);
-    return res.data.files.map(file => {
-      return {
+    const files = res.data.files || [];
+
+    return files
+      .filter(file => file.patch)
+      .map(file => ({
         file: file.filename,
-        patch: file.patch || ''
-      };
-    }).filter(f => f.patch);
+        patch: file.patch,
+      }));
+
   } catch (err) {
     console.error('❌ Error fetching commit diff:', err.message);
     return null;
