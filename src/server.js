@@ -11,7 +11,7 @@ const { fetchPRDiff } = require('./githubClient');
 const { parseUnifiedDiff } = require('./diffParser');
 const { generatePRSummary, generateCommitMessage } = require('./llmHandler');
 const { postSummaryComment } = require('./commentManager');
-const { fetchCommitDiff } = require('./githubClient'); // We'll add this too
+const { fetchCommitDiff } = require('./githubClient');
 
 app.use(bodyParser.json());
 
