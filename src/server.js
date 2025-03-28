@@ -29,7 +29,8 @@ app.post('/webhook', async (req, res) => {
     const diff = await fetchPRDiff(owner, repo, prNumber);
 
     if (diff) {
-      const parsed = parseUnifiedDiff(diff);
+      const unifiedDiffText = diff.map(f => `diff --git a/${f.file} b/${f.file}\n${f.patch}`).join('\n');
+      const parsed = parseUnifiedDiff(unifiedDiffText);
       const summary = await generatePRSummary(parsed);
       console.log('📝 LLM Summary:\n', summary);
 
