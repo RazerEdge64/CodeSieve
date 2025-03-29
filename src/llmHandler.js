@@ -50,7 +50,7 @@ function buildPrompt(diff) {
 async function generateCommitMessage(diffText) {
   const prompt = `Here is a code diff. Suggest a single-line commit message using one of the conventional prefixes: feat:, fix:, docs:, refactor:, chore:, test:. Be concise and relevant.\n\n${diffText}`;
 
-  console.log('🧠 Commit Prompt Sent to LLM:\n', prompt.slice(0, 1000));
+  console.log('🧠 Commit Prompt Sent to LLM:\n');
 
   try {
     const res = await axios.post(
