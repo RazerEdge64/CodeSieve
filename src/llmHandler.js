@@ -84,12 +84,13 @@ async function generateCommitMessage(parsedDiff) {
 }
 
 function buildCommitPrompt(diff) {
-  let prompt = `Here is the code diff. Suggest a commit message using one of the conventional prefixes: feat:, fix:, docs:, refactor:, chore:, test:\n\n`;
+  let prompt = `Here is the code diff. Suggest a concise, conventional commit message using one of the following prefixes: feat:, fix:, docs:, refactor:, chore:, test:\n\n`;
 
   for (const file of diff) {
     prompt += `File: ${file.file}\nPatch:\n${file.patch}\n\n`;
   }
 
+  console.log('🧠 Commit Prompt Sent to LLM:\n', prompt.slice(0, 1000));
   return prompt;
 }
 
