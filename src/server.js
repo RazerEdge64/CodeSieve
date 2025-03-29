@@ -76,7 +76,7 @@ app.post('/webhook', async (req, res) => {
             ? unifiedDiffText.substring(0, MAX_DIFF_LENGTH) + "\n... (diff truncated)"
             : unifiedDiffText;
 
-        console.log('🧾 Diff Preview:\n', truncatedDiffText.slice(0, 1000)); // Log truncated version
+        // console.log('🧾 Diff Preview:\n', truncatedDiffText.slice(0, 1000)); // Log truncated version
 
         const suggestedMessage = await generateCommitMessage(truncatedDiffText); // Pass truncated version
 
