@@ -47,8 +47,8 @@ function buildPrompt(diff) {
   return prompt;
 }
 
-async function generateCommitMessage(parsedDiff) {
-  const prompt = buildCommitPrompt(parsedDiff);
+async function generateCommitMessage(diffText) {
+  const prompt = `Here is a code diff. Suggest a single-line commit message using one of the conventional prefixes: feat:, fix:, docs:, refactor:, chore:, test:. Be concise and relevant.\n\n${diffText}`;
 
   try {
     const res = await axios.post(
@@ -58,7 +58,7 @@ async function generateCommitMessage(parsedDiff) {
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful assistant generating concise and conventional commit messages.',
+            content: 'You are an assistant that generates conventional commit messages.',
           },
           {
             role: 'user',
@@ -81,17 +81,6 @@ async function generateCommitMessage(parsedDiff) {
     console.error('❌ Error generating commit message:', error.response?.data || error.message);
     return 'Failed to generate commit message.';
   }
-}
-
-function buildCommitPrompt(diff) {
-  let prompt = `Here is the code diff. Suggest a concise, conventional commit message using one of the following prefixes: feat:, fix:, docs:, refactor:, chore:, test:\n\n`;
-
-  for (const file of diff) {
-    prompt += `File: ${file.file}\nPatch:\n${file.patch}\n\n`;
-  }
-
-  console.log('🧠 Commit Prompt Sent to LLM:\n', prompt.slice(0, 1000));
-  return prompt;
 }
 
 module.exports = {

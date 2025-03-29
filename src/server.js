@@ -65,12 +65,11 @@ app.post('/webhook', async (req, res) => {
 
       if (diff && Array.isArray(diff)) {
         const unifiedDiffText = diff.map(f => `diff --git a/${f.file} b/${f.file}\n${f.patch}`).join('\n');
+      
         console.log('🧾 Diff Preview:\n', unifiedDiffText.slice(0, 1000));
-        
-        const parsed = parseUnifiedDiff(unifiedDiffText);
-        
-        const suggestedMessage = await generateCommitMessage(parsed);
-
+      
+        const suggestedMessage = await generateCommitMessage(unifiedDiffText);
+      
         console.log(`✍️ Suggested commit message for ${sha}:\n${suggestedMessage}\n`);
       } else {
         console.log(`⚠️ No diff found for commit: ${sha}`);
