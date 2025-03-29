@@ -61,19 +61,30 @@ app.post('/webhook', async (req, res) => {
       const sha = commit.id;
       console.log(`📦 Processing commit: ${sha}`);
 
-      const diff = await fetchCommitDiff(owner, repo, sha);
+      const diff = await fetchCommitDiff(owner, repo, sha); // This now returns array [{file, patch}, ...]
 
-      if (diff && Array.isArray(diff)) {
-        const unifiedDiffText = diff.map(f => `diff --git a/${f.file} b/${f.file}\n${f.patch}`).join('\n');
-      
-        console.log('🧾 Diff Preview:\n', unifiedDiffText.slice(0, 1000));
-      
-        const suggestedMessage = await generateCommitMessage(unifiedDiffText);
-      
+      // Add a check here
+      if (diff && Array.isArray(diff) && diff.length > 0) {
+        // Construct the unified diff text from the patches
+        const unifiedDiffText = diff.map(f =>
+            `diff --git a/${f.file} b/${f.file}\n--- a/${f.file}\n+++ b/${f.file}\n${f.patch}` // Reconstruct a basic unified diff header
+        ).join('\n\n'); // Add extra newline between file patches for clarity
+
+        // Optional: Limit diff size if it's too large for the LLM prompt
+        const MAX_DIFF_LENGTH = 10000; // Adjust as needed (consider OpenAI token limits)
+        const truncatedDiffText = unifiedDiffText.length > MAX_DIFF_LENGTH
+            ? unifiedDiffText.substring(0, MAX_DIFF_LENGTH) + "\n... (diff truncated)"
+            : unifiedDiffText;
+
+        console.log('🧾 Diff Preview:\n', truncatedDiffText.slice(0, 1000)); // Log truncated version
+
+        const suggestedMessage = await generateCommitMessage(truncatedDiffText); // Pass truncated version
+
         console.log(`✍️ Suggested commit message for ${sha}:\n${suggestedMessage}\n`);
       } else {
-        console.log(`⚠️ No diff found for commit: ${sha}`);
+        console.log(`⚠️ No diff data found or failed to fetch for commit: ${sha}`);
       }
+
     }
 
   } else {
